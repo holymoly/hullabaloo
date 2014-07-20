@@ -104,6 +104,15 @@ module.exports = function(app, passport) {
 		// save/update the post
 		app.post('/search', isLoggedIn, function(req, res) {
 			console.log(req.body);
+             // Use post model for search
+          
+            Post.textSearch(req.body.srchTerm, function (err, output) {
+                if (err)
+                    console.log(err);
+                else
+                console.log(output);
+            });
+
 			res.render('post.ejs', { 
 				srchTerm	: req.body.srchTerm,
 				category 	: '',

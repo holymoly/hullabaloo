@@ -7,7 +7,7 @@
         <!-- Optional theme -->
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
         <style>
-            body        { padding-top:80px; word-wrap:break-word; }
+            body    { padding-top:20px;}
         </style>
         <style type="text/css" media="screen">
             #editor { 
@@ -17,7 +17,7 @@
         </style>
     </head>
     <body>
-         <div class="container">
+        <div class="container col-sm-9 col-md-9">
             <form class="form-horizontal" role="form" action="/save" method="post">
                 <div class="form-group">
                     <label for="Category" class="col-sm-2 control-label">Category</label>
@@ -60,37 +60,44 @@
                 <label for="Tags" class="col-sm-2 control-label"></label>
                 <button id="submit" type="submit" class="btn btn-primary">Save/Update</button>
             </form> 
-            <form action="/search "class="form-horizontal" role="search" method="post">
-                <label for="srchTerm" class="col-sm-2 control-label">Search</label>
+        </div> 
+        <div class="container col-sm-3 col-md-3">
+            <form action="/search "class="navbar-form" role="search" method="post">
                 <div class="input-group">
                     <input type="text" class="form-control" placeholder="Search" name="srchTerm" id="srchTerm" value=<%= srchTerm %>>
                     <span class="input-group-btn">
-                        <button class="btn btn-default" type="submit">     
+                        <button class="btn btn-primary" type="submit">     
                             GO!
                         </button>
                     </span>
                 </div>
             </form>
-        </div> 
+            <label class="col-sm-2 control-label"> Result</label>
+        </div>
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
         <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
         <script src="/ace/src-min/ace.js" type="text/javascript" charset="utf-8"></script>
+        <script src="/ace/src-min/ext-language_tools.js"></script>
         <script>
                    
             var textarea = $('textarea[name="Post"]');
             textarea.hide();
 
             var editor = ace.edit("editor");
-            editor.setTheme("ace/theme/github");
+            editor.setTheme("ace/theme/ambiance");
             editor.getSession().setMode("ace/mode/javascript");
+            editor.setOptions({
+                enableBasicAutocompletion: true,
+                enableSnippets: true,
+                enableLiveAutocompletion: true
+            });
 
             var doc = editor.getSession().getDocument()
 
             $('#submit').on('click', function() {
                 textarea.val(editor.getSession().getValue());
             });
-
         </script>
     </body>
 </html>
