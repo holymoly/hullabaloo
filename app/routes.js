@@ -1,6 +1,6 @@
 // load up the post model
 var Post       = require('../app/models/post');
-
+var fs = require('fs');
 module.exports = function(app, passport) {
 
 // normal routes ===============================================================
@@ -19,13 +19,18 @@ module.exports = function(app, passport) {
 
 	// POST SECTION =========================
 	app.get('/post', isLoggedIn, function(req, res) {
+        var files = fs.readdirSync('./public/ace/src-min/');
+        console.log(files);
 		res.render('post.ejs', {
 			srchTerm	: '',
 			category 	: '',
 			title 		: '',
+            description : '',
 			type 		: '',
 			post 		: '',
-			tags		: ''
+			tags		: '',
+            result      : undefined,
+            theme       : files
 		});
 	});
 
@@ -64,6 +69,7 @@ module.exports = function(app, passport) {
                         console.log(newPost);
                         newPost.category    = req.body.Category;
                     	newPost.title       = req.body.Title;
+                        newPost.description = req.body.Description;
                         newPost.post        = req.body.Post;
                         newPost.type        = req.body.Type;
                         newPost.tags        = req.body.Tags.split(",");
@@ -92,9 +98,11 @@ module.exports = function(app, passport) {
 						srchTerm	: '',
 						category 	: req.body.Category,
 						title 		: req.body.Title,
+                        description : req.body.Description,
 						type 		: req.body.Type,
 						post 		: req.body.Post,
-						tags		: req.body.Tags
+						tags		: req.body.Tags,
+                        result      : undefined
 					});
 				};
 			});
@@ -111,17 +119,41 @@ module.exports = function(app, passport) {
                     console.log(err);
                 else
                 console.log(output);
-            });
+            
 
-			res.render('post.ejs', { 
-				srchTerm	: req.body.srchTerm,
-				category 	: '',
-				title 		: '',
-				type 		: '',
-				post 		: '',
-				tags		: ''
-			});
+    			res.render('post.ejs', { 
+    				srchTerm	: req.body.srchTerm,
+    				category 	: '',
+    				title 		: '',
+                    description : '',
+    				type 		: '',
+    				post 		: '',
+    				tags		: '',
+                    result      : output.results
+    			});
+            });
 		});
+
+        // Select ============================
+        // Select a post from search list
+        app.post('/select', isLoggedIn, function(req, res) {
+            console.log(req.body);
+
+            Post.findById(req.body.select, function (err, result) {
+                console.log(result);
+            
+                res.render('post.ejs', { 
+                    srchTerm    : '',
+                    category    : result.category,
+                    title       : result.title,
+                    description : result.description,
+                    type        : result.type,
+                    post        : result.post,
+                    tags        : result.tags,
+                    result      : ''  
+                });
+            });
+        });
 
 // =============================================================================
 // AUTHENTICATE (FIRST LOGIN) ==================================================

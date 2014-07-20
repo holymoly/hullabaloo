@@ -6,6 +6,7 @@ var textSearch = require('mongoose-text-search');
 var postSchema = mongoose.Schema({
     category    : String,
     title       : String,
+    description : String,
     post        : String,
     type        : String,
     tags        : [String],
@@ -17,16 +18,18 @@ postSchema.plugin(textSearch);
 postSchema.index({
     category    : 'text',
     title       : 'text',
+    description : 'text',
     post        : 'text',
     tags        : 'text',
     author      : 'text',
 },{
     name: "best_match_index",
     weights: {
-        title: 5,
-        tags: 5,
-        category: 4,
-        post: 3,
+        title       : 5,
+        tags        : 5,
+        description : 5,
+        category    : 4,
+        post        : 3,
     }
 })
 

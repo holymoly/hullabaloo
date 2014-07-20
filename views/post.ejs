@@ -12,12 +12,12 @@
         <style type="text/css" media="screen">
             #editor { 
                 position: relative;
-                height: 200;
+                height: 400;
             }
         </style>
     </head>
     <body>
-        <div class="container col-sm-9 col-md-9">
+        <div class="container col-sm-8 col-md-8">
             <form class="form-horizontal" role="form" action="/save" method="post">
                 <div class="form-group">
                     <label for="Category" class="col-sm-2 control-label">Category</label>
@@ -32,6 +32,12 @@
                     </div>
                 </div>
                 <div class="form-group">
+                    <label for="Description" class="col-sm-2 control-label">Description</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" name="Description" id="Description" placeholder="A Summary of the post" onkeydown = "return (event.keyCode!=13);" value=<%= description %>>
+                    </div>
+                </div>
+                <div class="form-group">
                     <label for="Type" class="col-sm-2 control-label">Type</label>
                     <div class="col-sm-10">
                         <select class="form-control" name="Type" id="Type" placeholder="Type of Post" onkeydown = "return (event.keyCode!=13);">
@@ -43,12 +49,30 @@
                         </select>
                     </div>
                 </div>
-                
                 <div class="form-group">
                     <label for="Post" class="col-sm-2 control-label">Post</label>
                     <div class="col-sm-10">
                         <div id="editor"><%= post %></div>
                         <textarea name="Post" style="display: none;"></textarea>
+                        <select  name="Theme" id="theme" onkeydown = "return (event.keyCode!=13);" onchange="setTheme(this)">
+                            <% if (typeof theme !== 'undefined') { %>
+                                <% for(var i=0; i<theme.length; i++) { %>
+                                    <% if( theme[i].indexOf('theme-') >= 0){ %>
+                                        <option value=<%= theme[i].replace("theme-","").replace(".js","") %>><%= theme[i].replace("theme-","").replace(".js","") %></option>
+                                    <% } %>
+                                <% } %>
+                            <% } %>
+                        </select>
+                        <select  name="Mode" id="mode" onkeydown = "return (event.keyCode!=13);" onchange="setMode(this)">
+
+                            <% if (typeof theme !== 'undefined') { %>
+                                <% for(var i=0; i<theme.length; i++) { %>
+                                    <% if( theme[i].indexOf('mode-') >= 0){ %>
+                                        <option value=<%= theme[i].replace("mode-","").replace(".js","") %>><%= theme[i].replace("mode-","").replace(".js","") %></option>
+                                    <% } %>
+                                <% } %>
+                            <% } %>
+                        </select>
                     </div>
                 </div>
                 <div class="form-group">
@@ -61,10 +85,10 @@
                 <button id="submit" type="submit" class="btn btn-primary">Save/Update</button>
             </form> 
         </div> 
-        <div class="container col-sm-3 col-md-3">
+        <div class="container col-sm-3 col-md-3" style="background-color: #e0e0e0;">
             <form action="/search "class="navbar-form" role="search" method="post">
                 <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Search" name="srchTerm" id="srchTerm" value=<%= srchTerm %>>
+                    <input type="text" class="form-control" placeholder="Search" name="srchTerm" id="srchTerm" value=<%= srchTerm %> >
                     <span class="input-group-btn">
                         <button class="btn btn-primary" type="submit">     
                             GO!
@@ -72,7 +96,19 @@
                     </span>
                 </div>
             </form>
-            <label class="col-sm-2 control-label"> Result</label>
+            <div class="list-group">
+                <% if (typeof result !== 'undefined') { %>
+                    <% for(var i=0; i<result.length; i++) { %>
+                        <form action="/select" method="post" id=<%= result[i].obj._id %> > 
+                            <a href="#" onclick="document.getElementById('<%= result[i].obj._id %>').submit()"class="list-group-item"> 
+                                <input type="hidden" name="select" id="select" value=<%= result[i].obj._id %> >
+                                <h5><%= result[i].obj.title %></h5>
+                                <p class="list-group-item-text"><%= result[i].obj.description %></p>
+                            </a>
+                        </form>
+                    <% } %>
+                <% } %>
+            </div>
         </div>
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
@@ -80,7 +116,6 @@
         <script src="/ace/src-min/ace.js" type="text/javascript" charset="utf-8"></script>
         <script src="/ace/src-min/ext-language_tools.js"></script>
         <script>
-                   
             var textarea = $('textarea[name="Post"]');
             textarea.hide();
 
@@ -98,6 +133,13 @@
             $('#submit').on('click', function() {
                 textarea.val(editor.getSession().getValue());
             });
+
+            function setTheme(selector) {
+                editor.setTheme("ace/theme/"+selector.value);
+            }
+            function setMode(selector) {
+                 editor.getSession().setMode("ace/mode/"+selector.value);
+            }
         </script>
     </body>
 </html>
