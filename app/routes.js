@@ -20,7 +20,6 @@ module.exports = function(app, passport) {
 	// POST SECTION =========================
 	app.get('/post', isLoggedIn, function(req, res) {
         var files = fs.readdirSync('./public/ace/src-min/');
-        console.log(files);
 		res.render('post.ejs', {
 			srchTerm	: '',
 			category 	: '',
@@ -92,7 +91,7 @@ module.exports = function(app, passport) {
 	            
 
 				var response = function(err,exists,req){
-
+                    var files = fs.readdirSync('./public/ace/src-min/');
 					//error and exists need to be finished(Reporting to website)
 					res.render('post.ejs', { 
 						srchTerm	: '',
@@ -102,7 +101,8 @@ module.exports = function(app, passport) {
 						type 		: req.body.Type,
 						post 		: req.body.Post,
 						tags		: req.body.Tags,
-                        result      : undefined
+                        result      : undefined,
+                        theme       : files
 					});
 				};
 			});
@@ -114,13 +114,12 @@ module.exports = function(app, passport) {
 			console.log(req.body);
              // Use post model for search
           
-            Post.textSearch(req.body.srchTerm, function (err, output) {
-                if (err)
+            Post.textSearch(req.body.srchTerm,{project : 'title description'}, function (err, output) {
+                if (err){
                     console.log(err);
-                else
-                console.log(output);
+                }
             
-
+                var files = fs.readdirSync('./public/ace/src-min/');
     			res.render('post.ejs', { 
     				srchTerm	: req.body.srchTerm,
     				category 	: '',
@@ -129,7 +128,9 @@ module.exports = function(app, passport) {
     				type 		: '',
     				post 		: '',
     				tags		: '',
-                    result      : output.results
+                    result      : output.results,
+                    theme       : files,
+                    selID       : -1
     			});
             });
 		});
@@ -139,18 +140,31 @@ module.exports = function(app, passport) {
         app.post('/select', isLoggedIn, function(req, res) {
             console.log(req.body);
 
-            Post.findById(req.body.select, function (err, result) {
-                console.log(result);
-            
-                res.render('post.ejs', { 
-                    srchTerm    : '',
-                    category    : result.category,
-                    title       : result.title,
-                    description : result.description,
-                    type        : result.type,
-                    post        : result.post,
-                    tags        : result.tags,
-                    result      : ''  
+            //Get back search results
+            Post.textSearch(req.body.srchTerm,{project : 'title description'}, function (err, output) {
+                if (err){
+                    console.log(err);
+                }
+                console.log(output);
+                //find seleted post for rendering
+                Post.findById(req.body.select, function (err, result) {
+                    if (err){
+                        console.log(err);
+                    }
+                    console.log(result);
+                    var files = fs.readdirSync('./public/ace/src-min/');
+                    res.render('post.ejs', { 
+                        srchTerm    : req.body.srchTerm,
+                        category    : result.category,
+                        title       : result.title,
+                        description : result.description,
+                        type        : result.type,
+                        post        : result.post,
+                        tags        : result.tags,
+                        result      : output.results,
+                        theme       : files,
+                        selID       : req.body.selID
+                    });
                 });
             });
         });
