@@ -1,5 +1,6 @@
 // load up the post model
 var Post       = require('../app/models/post');
+var Preference = require('../app/models/preference');
 var fs = require('fs');
 module.exports = function(app, passport) {
 
@@ -20,17 +21,26 @@ module.exports = function(app, passport) {
 	// POST SECTION =========================
 	app.get('/post', isLoggedIn, function(req, res) {
         var files = fs.readdirSync('./public/ace/src-min/');
-		res.render('post.ejs', {
-			srchTerm	: '',
-			category 	: '',
-			title 		: '',
-            description : '',
-			type 		: '',
-			post 		: '',
-			tags		: '',
-            result      : undefined,
-            theme       : files
-		});
+        process.nextTick(function() {
+	        Preference.findOne({ 'preference.email' : req.user.local.email }, function(err, preference) {
+	        	if (err)
+               		throw err;
+
+				res.render('post.ejs', {
+					srchTerm	: '',
+					category 	: '',
+					title 		: '',
+		            description : '',
+					type 		: '',
+					post 		: '',
+					tags		: '',
+		            result      : undefined,
+		            theme       : files,
+		            editor 		: preference.preference.editor,
+		            mode 		: preference.preference.mainLanguage
+				});
+			});
+		});	
 	});
 
 	// LOGOUT ==============================
@@ -62,7 +72,6 @@ module.exports = function(app, passport) {
                         console.log('post already exists');
                         response(false,true,req);
                     } else {
-
                         // create the post
                         var newPost            	 = new Post();
                         console.log(newPost);
@@ -70,7 +79,7 @@ module.exports = function(app, passport) {
                     	newPost.title       = req.body.Title;
                         newPost.description = req.body.Description;
                         newPost.post        = req.body.Post;
-                        newPost.type        = req.body.Type;
+                        newPost.type        = req.body.Mode;
                         newPost.tags        = req.body.Tags.split(",");
                         newPost.created     = new Date().toISOString();
                         newPost.Author      = req.user.local.email;
@@ -86,7 +95,6 @@ module.exports = function(app, passport) {
                             response(false,false,req);
                         });
                     }
-
                 });
 	            
 
@@ -102,7 +110,9 @@ module.exports = function(app, passport) {
 						post 		: req.body.Post,
 						tags		: req.body.Tags,
                         result      : undefined,
-                        theme       : files
+                        theme       : files,
+                        editor 		: req.body.Theme,
+		            	mode 		: req.body.Mode
 					});
 				};
 			});
@@ -130,7 +140,9 @@ module.exports = function(app, passport) {
     				tags		: '',
                     result      : output.results,
                     theme       : files,
-                    selID       : -1
+                    selID       : -1,
+                    editor 		: req.body.themeSearch,
+		            mode 		: req.body.modeSearch
     			});
             });
 		});
@@ -163,7 +175,7 @@ module.exports = function(app, passport) {
                         tags        : result.tags,
                         result      : output.results,
                         theme       : files,
-                        selID       : req.body.selID
+                        selID       : req.body.selID,
                     });
                 });
             });

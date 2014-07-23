@@ -38,22 +38,11 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="Type" class="col-sm-2 control-label">Type</label>
-                    <div class="col-sm-10">
-                        <select class="form-control" name="Type" id="Type" placeholder="Type of Post" onkeydown = "return (event.keyCode!=13);">
-                            <option value="Text" <% if (type == 'Text') { %>selected<% } %> >Text</option>
-                            <option value="Javascript" <% if (type == 'Javascript') { %>selected<% } %> >Javascript</option>
-                            <option value="C#" <% if (type == 'C#') { %>selected<% } %> >C#</option>
-                            <option value="C" <% if (type == 'C') { %>selected<% } %> >C</option>
-                            <option value="C++" <% if (type == 'C++') { %>selected<% } %> >C++</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
                     <label for="Post" class="col-sm-2 control-label">Post</label>
                     <div class="col-sm-10">
                         <div id="editor"><%= post %></div>
                         <textarea name="Post" style="display: none;"></textarea>
+                        
                         <select  name="Theme" id="theme" onkeydown = "return (event.keyCode!=13);" onchange="setTheme(this)">
                             <% if (typeof theme !== 'undefined') { %>
                                 <% for(var i=0; i<theme.length; i++) { %>
@@ -86,6 +75,8 @@
         </div> 
         <div class="container col-sm-3 col-md-3" style="background-color: #e0e0e0;">
             <form action="/search "class="navbar-form" role="search" method="post">
+                <input type="hidden" name="themeSearch" id="themeSearch" value="<%= editor %>" >
+                <input type="hidden" name="modeSearch" id="modeSearch" value="<%= mode %>" >
                 <div class="input-group">
                     <input type="text" class="form-control" placeholder="Search" name="srchTerm" id="srchTerm" value="<%= srchTerm %>" >
                     <span class="input-group-btn">
@@ -145,6 +136,9 @@
             function setMode(selector) {
                  editor.getSession().setMode("ace/mode/"+selector.value);
             }
+
+            document.getElementById('theme').value = '<%= editor %>';
+            document.getElementById('mode').value = '<%= mode %>';
         </script>
     </body>
 </html>

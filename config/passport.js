@@ -3,6 +3,7 @@ var LocalStrategy    = require('passport-local').Strategy;
 
 // load up the user model
 var User       = require('../app/models/user');
+var Preference = require('../app/models/preference');
 
 // load the auth variables
 //var configAuth = require('./auth'); // use this one for testing
@@ -91,16 +92,27 @@ module.exports = function(passport) {
 
                         // create the user
                         var newUser            = new User();
+                        var newPreference      = new Preference();
 
                         newUser.local.email    = email;
                         newUser.local.password = newUser.generateHash(password);
 
+                        newPreference.preference.email = email;
+                        newPreference.preference.editor = 'github';
+                        newPreference.preference.mainLanguage = 'text';
+
+                        
                         newUser.save(function(err) {
                             if (err)
                                 throw err;
-
                             return done(null, newUser);
                         });
+
+                        newPreference.save(function(err) {
+                            if (err)
+                                throw err;
+                        });
+
                     }
 
                 });
