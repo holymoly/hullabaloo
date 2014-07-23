@@ -176,6 +176,8 @@ module.exports = function(app, passport) {
                         result      : output.results,
                         theme       : files,
                         selID       : req.body.selID,
+                        editor 		: req.body.themeSel,
+		           		mode 		: req.body.modeSel
                     });
                 });
             });

@@ -12,7 +12,7 @@
         <style type="text/css" media="screen">
             #editor { 
                 position: relative;
-                height: 400;
+                height: 70%;
             }
         </style>
     </head>
@@ -95,6 +95,8 @@
                             <% }else{ %>
                                 <a href="#" onclick="document.getElementById('<%= result[i].obj._id %>').submit()" class="list-group-item "> 
                             <% } %>
+                                    <input type="hidden" name="themeSel" id="themeSel" value="<%= editor %>" >
+                                    <input type="hidden" name="modeSel" id="modeSel" value="<%= mode %>" >
                                     <input type="hidden" name="select" id="select" value="<%= result[i].obj._id %>" >
                                     <input type="hidden" name="srchTerm" id="srchTerm" value="<%= srchTerm %>" >
                                     <input type="hidden" name="selID" id="selID" value="<%= i %>" >
@@ -130,15 +132,25 @@
                 textarea.val(editor.getSession().getValue());
             });
 
+            //Change Theme of Editor when selector changed
             function setTheme(selector) {
                 editor.setTheme("ace/theme/"+selector.value);
-            }
-            function setMode(selector) {
-                 editor.getSession().setMode("ace/mode/"+selector.value);
+                document.getElementById('themeSearch').value = selector.value;
+                document.getElementById('themeSel').value = selector.value;
             }
 
+            //Change Mode of Editor when selector changed
+            function setMode(selector) {
+                 editor.getSession().setMode("ace/mode/"+selector.value);
+                 document.getElementById('modeSearch').value = selector.value;
+                 document.getElementById('modeSel').value = selector.value;
+            }
+
+            //Set Values on Page Load
             document.getElementById('theme').value = '<%= editor %>';
             document.getElementById('mode').value = '<%= mode %>';
+            editor.setTheme("ace/theme/"+'<%= editor %>');
+            editor.getSession().setMode("ace/mode/"+'<%= mode %>');
         </script>
     </body>
 </html>
