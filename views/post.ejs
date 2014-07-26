@@ -6,35 +6,70 @@
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
         <!-- Optional theme -->
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
         <style>
             body    { padding-top:20px;}
         </style>
         <style type="text/css" media="screen">
             #editor { 
                 position: relative;
-                height: 70%;
+                height : 60%;
+            }
+            #editorFullscreen{ 
+                position: relative;
+                height : 80%;
+                width : 80%;
+            }
+            #theme { 
+                width : 200;
+                height: 25;
+            }
+            #mode { 
+                width : 200;
+                height: 25;
             }
         </style>
     </head>
     <body>
+        <% if (locals.exists) { %>
+            <form action="/update "class="navbar-form" method="post">
+                <div class="row alert alert-danger">
+                    <h3>
+                        <label for="Update" class="col-sm-offset-2 col-sm-2 control-label">Title already exists</label>
+                    </h3>
+                    <button  type="submit" id="Update" class="btn btn-primary col-sm-2">Update</button>
+                 
+
+
+                    <input type="hidden" name="Theme" value="<%= editor %>" >
+                    <input type="hidden" name="Mode" value="<%= mode %>" >
+                    <input type="hidden" name="Category" value="<%= category %>" >
+                    <input type="hidden" name="Title" value="<%= title %>" >
+                    <input type="hidden" name="Description" value="<%= description %>" >
+                    <input type="hidden" name="Post" value="<%= post %>" >
+                    <input type="hidden" name="Tags" value="<%= tags %>" >
+                    <input type="hidden" name="Id" value="<%= id %>" >
+                </div>
+            </form>
+        <% } %>
         <div class="container col-sm-8 col-md-8">
             <form class="form-horizontal" role="form" action="/save" method="post">
                 <div class="form-group">
                     <label for="Category" class="col-sm-2 control-label">Category</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" name="Category" id="Category" placeholder="Chose a category" onkeydown = "return (event.keyCode!=13);" value="<%= category %>" >
+                        <input type="text" class="form-control" required name="Category" id="Category" placeholder="Chose a category" onkeydown = "return (event.keyCode!=13);" value="<%= category %>" >
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="Title" class="col-sm-2 control-label">Title</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" name="Title" id="Title" placeholder="Title of Post" onkeydown = "return (event.keyCode!=13);" value="<%= title %>" >
+                        <input type="text" class="form-control" required name="Title" id="Title" placeholder="Title of Post" onkeydown = "return (event.keyCode!=13);" value="<%= title %>" >
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="Description" class="col-sm-2 control-label">Description</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" name="Description" id="Description" placeholder="A Summary of the post" onkeydown = "return (event.keyCode!=13);" value="<%= description %>" >
+                        <input type="text" class="form-control" required name="Description" id="Description" placeholder="A Summary of the post" onkeydown = "return (event.keyCode!=13);" value="<%= description %>" >
                     </div>
                 </div>
                 <div class="form-group">
@@ -42,9 +77,14 @@
                     <div class="col-sm-10">
                         <div id="editor"><%= post %></div>
                         <textarea name="Post" style="display: none;"></textarea>
+                        <a class="btn btn-default btn-sm pull-left" onmouseover="document.getElementById('fa-cog').className = 'fa fa-cog fa-spin'" onmouseout="document.getElementById('fa-cog').className = 'fa fa-cog'" onclick="resizeEditor()">
+                            <i class="fa fa-cog" id="fa-cog">
+                            </i> 
+                        </a>
                         
-                        <select  name="Theme" id="theme" onkeydown = "return (event.keyCode!=13);" onchange="setTheme(this)">
+                        <select class="form-control col-sm-2 input-sm" name="Theme" id="theme" onkeydown = "return (event.keyCode!=13);" onchange="setTheme(this)">
                             <% if (typeof theme !== 'undefined') { %>
+                            <option selected disabled>Choose Theme</option>
                                 <% for(var i=0; i<theme.length; i++) { %>
                                     <% if( theme[i].indexOf('theme-') >= 0){ %>
                                         <option value="<%= theme[i].replace("theme-","").replace(".js","") %>" ><%= theme[i].replace("theme-","").replace(".js","") %></option>
@@ -52,8 +92,9 @@
                                 <% } %>
                             <% } %>
                         </select>
-                        <select  name="Mode" id="mode" onkeydown = "return (event.keyCode!=13);" onchange="setMode(this)">
+                        <select class="form-control col-sm-2 col-sm-offset-1 input-sm" name="Mode" id="mode" onkeydown = "return (event.keyCode!=13);" onchange="setMode(this)">
                             <% if (typeof theme !== 'undefined') { %>
+                            <option selected disabled>Choose Mode</option>
                                 <% for(var i=0; i<theme.length; i++) { %>
                                     <% if( theme[i].indexOf('mode-') >= 0){ %>
                                         <option value="<%= theme[i].replace("mode-","").replace(".js","") %>" ><%= theme[i].replace("mode-","").replace(".js","") %></option>
@@ -61,24 +102,25 @@
                                 <% } %>
                             <% } %>
                         </select>
+                        
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="Tags" class="col-sm-2 control-label">Tags</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" name="Tags"id="Tags" placeholder="Comma seperated Tags describing the Post" onkeydown = "return (event.keyCode!=13);"value="<%= tags %>" >
+                        <input type="text" class="form-control" required name="Tags"id="Tags" placeholder="Comma seperated Tags describing the Post" onkeydown = "return (event.keyCode!=13);"value="<%= tags %>" >
                     </div>        
                 </div>
-                <label for="Tags" class="col-sm-2 control-label"></label>
-                <button id="submit" type="submit" class="btn btn-primary">Save/Update</button>
+                <label class="col-sm-2 control-label"></label>
+                <button id="submit" type="submit" class="btn btn-primary col-sm-2">Save</button>
             </form> 
         </div> 
         <div class="container col-sm-3 col-md-3" style="background-color: #e0e0e0;">
             <form action="/search "class="navbar-form" role="search" method="post">
-                <input type="hidden" name="themeSearch" id="themeSearch" value="<%= editor %>" >
-                <input type="hidden" name="modeSearch" id="modeSearch" value="<%= mode %>" >
+                <input type="hidden" name="Theme" id="themeSearch" value="<%= editor %>" >
+                <input type="hidden" name="Mode" id="modeSearch" value="<%= mode %>" >
                 <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Search" name="srchTerm" id="srchTerm" value="<%= srchTerm %>" >
+                    <input type="text" class="form-control" placeholder="Search" name="searchTerm" id="searchTerm" value="<%= searchTerm %>" >
                     <span class="input-group-btn">
                         <button class="btn btn-primary" type="submit">     
                             GO!
@@ -89,19 +131,19 @@
             <div class="list-group" id="searchList">
                 <% if (typeof result !== 'undefined') { %>
                     <% for(var i=0; i<result.length; i++) { %>
-                        <form action="/select" method="post" id="<%= result[i].obj._id %>" > 
+                        <form action="/select" method="post" id="<%= result[i]._id %>" > 
                             <% if (selID == i) { %>
-                                <a href="#" onclick="document.getElementById('<%= result[i].obj._id %>').submit()" class="list-group-item active"> 
+                                <a href="#" onclick="document.getElementById('<%= result[i]._id %>').submit()" class="list-group-item active"> 
                             <% }else{ %>
-                                <a href="#" onclick="document.getElementById('<%= result[i].obj._id %>').submit()" class="list-group-item "> 
+                                <a href="#" onclick="document.getElementById('<%= result[i]._id %>').submit()" class="list-group-item "> 
                             <% } %>
-                                    <input type="hidden" name="themeSel" id="themeSel" value="<%= editor %>" >
-                                    <input type="hidden" name="modeSel" id="modeSel" value="<%= mode %>" >
-                                    <input type="hidden" name="select" id="select" value="<%= result[i].obj._id %>" >
-                                    <input type="hidden" name="srchTerm" id="srchTerm" value="<%= srchTerm %>" >
-                                    <input type="hidden" name="selID" id="selID" value="<%= i %>" >
-                                    <h5><%= result[i].obj.title %></h5>
-                                    <p class="list-group-item-text"><%= result[i].obj.description %></p>
+                                    <input type="hidden" name="Theme" value="<%= editor %>" >
+                                    <input type="hidden" name="Mode" value="<%= mode %>" >
+                                    <input type="hidden" name="Select" value="<%= result[i]._id %>" >
+                                    <input type="hidden" name="searchTerm" value="<%= searchTerm %>" >
+                                    <input type="hidden" name="selID" value="<%= i %>" >
+                                    <h5><%= result[i].title %></h5>
+                                    <p class="list-group-item-text"><%= result[i].description %></p>
                                 </a>
                         </form>
                     <% } %>
@@ -132,18 +174,34 @@
                 textarea.val(editor.getSession().getValue());
             });
 
+            //Change size of editor
+            function resizeEditor() {
+                e = document.getElementById('editor');
+                e.id = "editorFullscreen";
+                editor.resize(true);
+            }
+
+
             //Change Theme of Editor when selector changed
             function setTheme(selector) {
                 editor.setTheme("ace/theme/"+selector.value);
-                document.getElementById('themeSearch').value = selector.value;
-                document.getElementById('themeSel').value = selector.value;
+                
+                var ThemeNode = document.getElementsByName("Theme");
+
+                for (var i = ThemeNode.length - 1; i >= 0; i--) {
+                    ThemeNode[i].value = selector.value;
+                };
             }
 
             //Change Mode of Editor when selector changed
             function setMode(selector) {
-                 editor.getSession().setMode("ace/mode/"+selector.value);
-                 document.getElementById('modeSearch').value = selector.value;
-                 document.getElementById('modeSel').value = selector.value;
+                editor.getSession().setMode("ace/mode/"+selector.value);
+
+                var ModeNode = document.getElementsByName("Mode");
+
+                for (var i = ModeNode.length - 1; i >= 0; i--) {
+                    ModeNode[i].value = selector.value;
+                };
             }
 
             //Set Values on Page Load

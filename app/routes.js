@@ -27,7 +27,7 @@ module.exports = function(app, passport) {
                		throw err;
 
 				res.render('post.ejs', {
-					srchTerm	: '',
+					searchTerm  : '',
 					category 	: '',
 					title 		: '',
 		            description : '',
@@ -67,14 +67,13 @@ module.exports = function(app, passport) {
                     	response(true,false);
                     }                       
 
-                    // check to see if theres already a post with that title
+                    // check to see if there is already a post with that title
                     if (post) {
-                        console.log('post already exists');
-                        response(false,true,req);
+                        console.log(post);
+                        renderSave(false,true,req,res,post._id);
                     } else {
                         // create the post
-                        var newPost            	 = new Post();
-                        console.log(newPost);
+                        var newPost         = new Post();
                         newPost.category    = req.body.Category;
                     	newPost.title       = req.body.Title;
                         newPost.description = req.body.Description;
@@ -91,96 +90,83 @@ module.exports = function(app, passport) {
                             	response(true,false,req);
                             }
                                 
-                            console.log(newPost);
-                            response(false,false,req);
+                        console.log(newPost);
+                        renderSave(false,false,req,res,undefined);
                         });
                     }
                 });
-	            
-
-				var response = function(err,exists,req){
-                    var files = fs.readdirSync('./public/ace/src-min/');
-					//error and exists need to be finished(Reporting to website)
-					res.render('post.ejs', { 
-						srchTerm	: '',
-						category 	: req.body.Category,
-						title 		: req.body.Title,
-                        description : req.body.Description,
-						type 		: req.body.Type,
-						post 		: req.body.Post,
-						tags		: req.body.Tags,
-                        result      : undefined,
-                        theme       : files,
-                        editor 		: req.body.Theme,
-		            	mode 		: req.body.Mode
-					});
-				};
 			});
 		});
 
+        // Post ===============================
+        // save/update the post
+        app.post('/update', isLoggedIn, function(req, res) {
+            console.log(req.body.Post);
+            // asynchronous
+            process.nextTick(function() {
+                Post.findById(req.body.Id, function (err, doc) {
+                    if (err){
+                        console.log(err);
+                        throw err;
+                        response(true,req);
+                    }
+
+                    doc.category    = req.body.Category,
+                    doc.title       = req.body.Title,
+                    doc.description = req.body.Description,
+                    doc.post        = req.body.Post,
+                    doc.type        = req.body.Mode,
+                    doc.tags        = req.body.Tags.split(","),
+                    doc.created     = new Date().toISOString(),
+                    doc.Author      = req.user.local.email,
+                    
+                    doc.save(renderSave(false,false,req,res,doc._id));
+
+                });
+            });
+        });
+        
 		// Search ============================
 		// save/update the post
 		app.post('/search', isLoggedIn, function(req, res) {
-			console.log(req.body);
-             // Use post model for search
-          
-            Post.textSearch(req.body.srchTerm,{project : 'title description'}, function (err, output) {
-                if (err){
-                    console.log(err);
-                }
-            
-                var files = fs.readdirSync('./public/ace/src-min/');
-    			res.render('post.ejs', { 
-    				srchTerm	: req.body.srchTerm,
-    				category 	: '',
-    				title 		: '',
-                    description : '',
-    				type 		: '',
-    				post 		: '',
-    				tags		: '',
-                    result      : output.results,
-                    theme       : files,
-                    selID       : -1,
-                    editor 		: req.body.themeSearch,
-		            mode 		: req.body.modeSearch
-    			});
-            });
+            //if search string is empty return all posts
+            if (req.body.searchTerm === ''){
+                Post.find({}, function (err, output) {
+                    if (err){
+                        console.log(err);
+                    }
+                    renderSearch(output,req,res);
+                });
+            }else{
+                Post.textSearch(req.body.searchTerm,{project : 'title description'}, function (err, output) {
+                    if (err){
+                        console.log(err);
+                    }
+                    processArray(0,output.results,req,res, renderSearch);
+                });
+            }
 		});
 
         // Select ============================
         // Select a post from search list
         app.post('/select', isLoggedIn, function(req, res) {
             console.log(req.body);
-
             //Get back search results
-            Post.textSearch(req.body.srchTerm,{project : 'title description'}, function (err, output) {
-                if (err){
-                    console.log(err);
-                }
-                console.log(output);
-                //find seleted post for rendering
-                Post.findById(req.body.select, function (err, result) {
+            if (req.body.searchTerm === ''){
+                Post.find({}, function (err, output) {
                     if (err){
                         console.log(err);
                     }
-                    console.log(result);
-                    var files = fs.readdirSync('./public/ace/src-min/');
-                    res.render('post.ejs', { 
-                        srchTerm    : req.body.srchTerm,
-                        category    : result.category,
-                        title       : result.title,
-                        description : result.description,
-                        type        : result.type,
-                        post        : result.post,
-                        tags        : result.tags,
-                        result      : output.results,
-                        theme       : files,
-                        selID       : req.body.selID,
-                        editor 		: req.body.themeSel,
-		           		mode 		: req.body.modeSel
-                    });
+                    renderSelect(output,req,res);
                 });
-            });
+            }else{
+                Post.textSearch(req.body.searchTerm,{project : 'title description'}, function (err, output) {
+                    if (err){
+                        console.log(err);
+                    }
+                    processArray(0,output.results,req,res,renderSelect);
+                });
+            }
         });
 
 // =============================================================================
@@ -247,10 +233,87 @@ module.exports = function(app, passport) {
 
 };
 
+
+//***************HELPER*************************
+
 // route middleware to ensure user is logged in
 function isLoggedIn(req, res, next) {
 	if (req.isAuthenticated())
 		return next();
-
 	res.redirect('/');
+}
+
+//remove score and and nested obj: from array
+function processArray(index, array, req, res, cb){
+    array[index] = array[index].obj;
+    //check if last item index/item is reached
+    if(index+1 === array.length){
+        cb(array,req,res);
+    }else{
+        processArray(index+1,array, req, res, cb);
+    }
+}
+
+//render page after search based on retreived data
+function renderSearch(data,req,res){
+    var files = fs.readdirSync('./public/ace/src-min/');
+    res.render('post.ejs', { 
+        searchTerm  : req.body.searchTerm,
+        category    : '',
+        title       : '',
+        description : '',
+        type        : '',
+        post        : '',
+        tags        : '',
+        result      : data,
+        theme       : files,
+        selID       : -1,
+        editor      : req.body.Theme,
+        mode        : req.body.Mode
+    });
+}
+
+//render page after select based on retreived data
+function renderSelect(data,req,res){
+    //find seleted post for rendering
+    Post.findById(req.body.Select, function (err, result) {
+        if (err){
+            console.log(err);
+        }
+        console.log(result);
+        var files = fs.readdirSync('./public/ace/src-min/');
+        res.render('post.ejs', { 
+            searchTerm  : req.body.searchTerm,
+            category    : result.category,
+            title       : result.title,
+            description : result.description,
+            type        : result.type,
+            post        : result.post,
+            tags        : result.tags,
+            result      : data,
+            theme       : files,
+            selID       : req.body.selID,
+            editor      : req.body.Theme,
+            mode        : req.body.Mode
+        });
+    });
+}
+
+function renderSave(err,exists,req,res,id){
+    var files = fs.readdirSync('./public/ace/src-min/');
+    //error and exists need to be finished(Reporting to website)
+    res.render('post.ejs', { 
+        searchTerm  : '',
+        category    : req.body.Category,
+        title       : req.body.Title,
+        description : req.body.Description,
+        post        : req.body.Post,
+        tags        : req.body.Tags,
+        result      : undefined,
+        theme       : files,
+        editor      : req.body.Theme,
+        mode        : req.body.Mode,
+        id          : id,
+        exists      : exists
+    });
 }
