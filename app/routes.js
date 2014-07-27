@@ -200,7 +200,11 @@ module.exports = function(app, passport) {
                     if (err){
                         console.log(err);
                     }
-                    processArray(0,output.results,req,res, renderSearch);
+                    if(output.results.length !== 0){
+                        processArray(0,output.results,req,res, renderSearch);
+                    }else{
+                        renderSearch([],req,res);
+                    }
                 });
             }
 		});
