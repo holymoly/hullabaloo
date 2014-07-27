@@ -16,6 +16,10 @@ git clone https://github.com/holymoly/hullabaloo
 cd hullabaloo
 npm install
 ```
+Run hullabaloo
+```
+node sever.js
+``
 
 Set user as admin from mongo cli
 --------------------------
