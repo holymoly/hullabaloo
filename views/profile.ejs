@@ -2,43 +2,87 @@
 <html>
 <head>
 	<title>Node Authentication</title>
-	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
 	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
-	<style>
-		body 		{ padding-top:80px; word-wrap:break-word; }
-	</style>
+	<link rel="stylesheet" type="text/css" href="/css/style.css">
 </head>
 <body>
 <div class="container">
 
 	<div class="page-header text-center">
 		<h1><span class="fa fa-anchor"></span> Profile Page</h1>
-		<a href="/logout" class="btn btn-default btn-sm">Logout</a>
 	</div>
 
 	<div class="row">
 
 		<!-- LOCAL INFORMATION -->
-		<div class="col-sm-6">
-			<div class="well">
+		<div class="col-sm-8 col-sm-offset-2">
+			<div class="well" name="adminDiv">
 				<h3><span class="fa fa-user"></span> Local</h3>
-
 				<% if (user.local.email) { %>
 					<p>
 						<strong>id</strong>: <%= user._id %><br>
 						<strong>email</strong>: <%= user.local.email %><br>
 						<strong>password</strong>: <%= user.local.password %>
 					</p>
-					
-					<a href="/unlink/local" class="btn btn-default">Unlink</a>
+					<a href="/unlink/local" class="btn btn-default">Remove Account</a>
 					<a href="/post" class="btn btn-default">Post</a>
+					<a href="/logout" class="btn btn-default btn-sm">Logout</a>
 				<% } else { %>
 					<a href="/connect/local" class="btn btn-default">Connect Local</a>
 				<% } %>
-
 			</div>
 		</div>
-
+		<% if (user.local.admin) { %>
+			<div class="col-sm-8 col-sm-offset-2">
+				<div class="panel panel-default">
+				  	<!-- Default panel contents -->
+				  	<h3><div class="panel-heading">User Table</div></h3>
+				  	<div class="table-responsive">
+					  	<!-- Table -->
+					  	<table class="table">
+					   		<thead>
+					          	<tr>
+						            <th>User email</th>
+						            <th>Is Admin</th>
+						            <th>Is Locked</th>
+						            <th></th>
+					          	</tr>
+					        </thead>
+					        <tbody>
+					        	<% for(var i=0; i<allUser.length; i++) { %>
+						          	<tr>
+						          		<form action="/updateUser" method="post">
+								            <td>
+								            	<%= allUser[i].local.email %>
+								            	<input type="hidden" name="User" value="<%= allUser[i].local.email %>" >
+								            </td>
+								            <td>
+								            	<% if  (allUser[i].local.admin){ %>
+								            		<input type="checkbox" name="Admin" checked="checked">
+								            	<% } else { %>
+								            		<input type="checkbox" name="Admin">
+								            	<% } %>
+								            </td>
+								            <td>
+								            	<% if  (allUser[i].local.locked){ %>
+								            		<input type="checkbox" name="Locked" checked="checked">
+								            	<% } else { %>
+								            		<input type="checkbox" name="Locked">
+								            	<% } %>
+								            </td>
+								            <td>
+								            	<button  type="submit" id="Update" class="btn btn-primary">Update</button>
+								            </td>
+								        </form>
+							        </tr>							        
+					          	<% } %>
+					        </tbody>
+					  	</table>
+				  	</div>
+				</div>			
+			</div>
+		<% } %>
 </div>
 </body>
 </html>

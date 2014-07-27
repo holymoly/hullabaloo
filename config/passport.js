@@ -3,6 +3,7 @@ var LocalStrategy    = require('passport-local').Strategy;
 
 // load up the user model
 var User       = require('../app/models/user');
+var Preference = require('../app/models/preference');
 
 // load the auth variables
 //var configAuth = require('./auth'); // use this one for testing
@@ -54,6 +55,9 @@ module.exports = function(passport) {
                 if (!user.validPassword(password))
                     return done(null, false, req.flash('loginMessage', 'Oops! Wrong password.'));
 
+                if (user.local.locked === true)
+                    return done(null, false, req.flash('loginMessage', 'User is locked'));
+
                 // all is well, return user
                 else
                     return done(null, user);
@@ -91,16 +95,29 @@ module.exports = function(passport) {
 
                         // create the user
                         var newUser            = new User();
+                        var newPreference      = new Preference();
 
                         newUser.local.email    = email;
                         newUser.local.password = newUser.generateHash(password);
+                        newUser.local.admin    = false;
+                        newUser.local.lock     = false;
 
+                        newPreference.preference.email = email;
+                        newPreference.preference.editor = 'github';
+                        newPreference.preference.mainLanguage = 'text';
+
+                        
                         newUser.save(function(err) {
                             if (err)
                                 throw err;
-
                             return done(null, newUser);
                         });
+
+                        newPreference.save(function(err) {
+                            if (err)
+                                throw err;
+                        });
+
                     }
 
                 });
