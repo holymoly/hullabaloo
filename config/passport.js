@@ -55,6 +55,9 @@ module.exports = function(passport) {
                 if (!user.validPassword(password))
                     return done(null, false, req.flash('loginMessage', 'Oops! Wrong password.'));
 
+                if (user.local.locked === true)
+                    return done(null, false, req.flash('loginMessage', 'User is locked'));
+
                 // all is well, return user
                 else
                     return done(null, user);
@@ -96,6 +99,8 @@ module.exports = function(passport) {
 
                         newUser.local.email    = email;
                         newUser.local.password = newUser.generateHash(password);
+                        newUser.local.admin    = false;
+                        newUser.local.lock     = false;
 
                         newPreference.preference.email = email;
                         newPreference.preference.editor = 'github';

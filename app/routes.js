@@ -1,6 +1,7 @@
 // load up the post model
 var Post       = require('../app/models/post');
 var Preference = require('../app/models/preference');
+var User = require('../app/models/user');
 var fs = require('fs');
 module.exports = function(app, passport) {
 
@@ -8,37 +9,35 @@ module.exports = function(app, passport) {
 
 	// show the home page (will also have our login links)
 	app.get('/', function(req, res) {
-		res.render('index.ejs');
+		res.render('login.ejs', { message: req.flash('loginMessage') });
 	});
 
 	// PROFILE SECTION =========================
 	app.get('/profile', isLoggedIn, function(req, res) {
-		res.render('profile.ejs', {
-			user : req.user
-		});
+        //console.log(req.user.local.email);
+        User.findOne({ 'local.email' : req.user.local.email },'local.admin', function(err, user) {
+            if (err)
+                throw err;
+            User.find({},'local.admin local.locked local.email' , function(err,allUser){
+                if (err)
+                    throw err;
+                console.log(allUser);
+                res.render('profile.ejs', {
+                    user    : req.user,
+                    admin   : user.local.admin,
+                    allUser : allUser
+                });
+            });
+        });
 	});
 
 	// POST SECTION =========================
 	app.get('/post', isLoggedIn, function(req, res) {
-        var files = fs.readdirSync('./public/ace/src-min/');
         process.nextTick(function() {
 	        Preference.findOne({ 'preference.email' : req.user.local.email }, function(err, preference) {
 	        	if (err)
                		throw err;
-
-				res.render('post.ejs', {
-					searchTerm  : '',
-					category 	: '',
-					title 		: '',
-		            description : '',
-					type 		: '',
-					post 		: '',
-					tags		: '',
-		            result      : undefined,
-		            theme       : files,
-		            editor 		: preference.preference.editor,
-		            mode 		: preference.preference.mainLanguage
-				});
+				renderDefault(preference,res);
 			});
 		});	
 	});
@@ -101,7 +100,6 @@ module.exports = function(app, passport) {
         // Post ===============================
         // save/update the post
         app.post('/update', isLoggedIn, function(req, res) {
-            console.log(req.body.Post);
             // asynchronous
             process.nextTick(function() {
                 Post.findById(req.body.Id, function (err, doc) {
@@ -121,6 +119,66 @@ module.exports = function(app, passport) {
                     doc.Author      = req.user.local.email,
                     
                     doc.save(renderSave(false,false,req,res,doc._id));
+
+                });
+            });
+        });
+
+        
+        // Update User settings ================
+        // save/update the user settings
+        app.post('/updateUser', isLoggedIn, function(req, res) {
+            // asynchronous
+            process.nextTick(function() {
+                User.findOne({ 'local.email' : req.body.User },'local.admin', function(err, user) {
+                    if (err)
+                        throw err;
+                    console.log(req.body);
+                    if(req.body.Admin==='on'){
+                        user.local.admin = true;
+                    }else{
+                        user.local.admin = false;
+                    }
+
+                    if(req.body.Locked==='on'){
+                        user.local.locked = true;
+                    }else{
+                        user.local.locked = false;
+                    }
+
+                    user.save(function(){
+                        if (err)
+                            throw err;
+                        User.find({},'local.admin local.locked local.email' , function(err,allUser){
+                            if (err)
+                                throw err;
+                            //console.log(allUser);
+                            res.render('profile.ejs', {
+                                user    : req.user,
+                                admin   : user.local.admin,
+                                allUser : allUser
+                            });
+                        });
+                    });
+                });
+            });
+        });
+
+        // Post ===============================
+        // save/update the post
+        app.post('/storeTheme', isLoggedIn, function(req, res) {
+            console.log(req.body);
+            // asynchronous
+            process.nextTick(function() {
+                Preference.findOne({ 'preference.email' : req.user.local.email }, function (err, doc) {
+                    if (err){
+                        console.log(err);
+                        throw err;
+                        response(true,req);
+                    }
+                    console.log(req.body.Theme);
+                    doc.preference.editor      = req.body.Theme,
+                    doc.save(renderSave(false,false,req,res,-1));
 
                 });
             });
@@ -182,7 +240,7 @@ module.exports = function(app, passport) {
 
 		// process the login form
 		app.post('/login', passport.authenticate('local-login', {
-			successRedirect : '/profile', // redirect to the secure profile section
+			successRedirect : '/post', // redirect to the secure profile section
 			failureRedirect : '/login', // redirect back to the signup page if there is an error
 			failureFlash : true // allow flash messages
 		}));
@@ -195,7 +253,7 @@ module.exports = function(app, passport) {
 
 		// process the signup form
 		app.post('/signup', passport.authenticate('local-signup', {
-			successRedirect : '/profile', // redirect to the secure profile section
+			successRedirect : '/post', // redirect to the secure profile section
 			failureRedirect : '/signup', // redirect back to the signup page if there is an error
 			failureFlash : true // allow flash messages
 		}));
@@ -253,6 +311,23 @@ function processArray(index, array, req, res, cb){
         processArray(index+1,array, req, res, cb);
     }
 }
+//render default post page
+function renderDefault(data,res){
+    var files = fs.readdirSync('./public/ace/src-min/');
+    res.render('post.ejs', {
+        searchTerm  : '',
+        category    : '',
+        title       : '',
+        description : '',
+        type        : '',
+        post        : '',
+        tags        : '',
+        result      : undefined,
+        theme       : files,
+        editor      : data.preference.editor,
+        mode        : data.preference.mainLanguage
+    });
+}
 
 //render page after search based on retreived data
 function renderSearch(data,req,res){
@@ -262,7 +337,6 @@ function renderSearch(data,req,res){
         category    : '',
         title       : '',
         description : '',
-        type        : '',
         post        : '',
         tags        : '',
         result      : data,
@@ -287,14 +361,13 @@ function renderSelect(data,req,res){
             category    : result.category,
             title       : result.title,
             description : result.description,
-            type        : result.type,
             post        : result.post,
             tags        : result.tags,
             result      : data,
             theme       : files,
             selID       : req.body.selID,
             editor      : req.body.Theme,
-            mode        : req.body.Mode
+            mode        : result.type,
         });
     });
 }

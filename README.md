@@ -2,3 +2,31 @@ hullabaloo
 ==========
 
 storing text based fuss with syntax highlighting
+
+Install Procedure
+-----------------
+
+[Install mongodb](http://docs.mongodb.org/manual/installation/)
+
+[Install nodejs](http://nodejs.org/)
+
+Clone repository
+```
+git clone https://github.com/holymoly/hullabaloo
+```
+
+Install
+Set user as admin from mongo cli
+--------------------------
+
+Users can be locked or set as admin from profile page (Account Settings).
+```
+db.users.update({"local.email":"user@email.com"},{$set : {"local.locked":false}})
+```
+
+Unlock user from mongo cli
+--------------------------
+
+```
+db.users.update({"local.email":"user@email.com"},{$set : {"local.locked":false}})
+```

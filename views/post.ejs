@@ -7,28 +7,7 @@
         <!-- Optional theme -->
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
         <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
-        <style>
-            body    { padding-top:20px;}
-        </style>
-        <style type="text/css" media="screen">
-            #editor { 
-                position: relative;
-                height : 60%;
-            }
-            #editorFullscreen{ 
-                position: relative;
-                height : 80%;
-                width : 80%;
-            }
-            #theme { 
-                width : 200;
-                height: 25;
-            }
-            #mode { 
-                width : 200;
-                height: 25;
-            }
-        </style>
+        <link rel="stylesheet" type="text/css" href="/css/style.css">
     </head>
     <body>
         <% if (locals.exists) { %>
@@ -39,8 +18,6 @@
                     </h3>
                     <button  type="submit" id="Update" class="btn btn-primary col-sm-2">Update</button>
                  
-
-
                     <input type="hidden" name="Theme" value="<%= editor %>" >
                     <input type="hidden" name="Mode" value="<%= mode %>" >
                     <input type="hidden" name="Category" value="<%= category %>" >
@@ -52,6 +29,18 @@
                 </div>
             </form>
         <% } %>
+
+
+        <form action="/storeTheme" method="post" id="storeTheme">
+            <input type="hidden" name="Theme" value="<%= editor %>" >
+            <input type="hidden" name="Mode" value="<%= mode %>" >
+            <input type="hidden" name="Category" value="<%= category %>" >
+            <input type="hidden" name="Title" value="<%= title %>" >
+            <input type="hidden" name="Description" value="<%= description %>" >
+            <input type="hidden" name="Post" value="<%= post %>" >
+            <input type="hidden" name="Tags" value="<%= tags %>" >
+        </form>
+
         <div class="container col-sm-8 col-md-8">
             <form class="form-horizontal" role="form" action="/save" method="post">
                 <div class="form-group">
@@ -77,12 +66,12 @@
                     <div class="col-sm-10">
                         <div id="editor"><%= post %></div>
                         <textarea name="Post" style="display: none;"></textarea>
-                        <a class="btn btn-default btn-sm pull-left" onmouseover="document.getElementById('fa-cog').className = 'fa fa-cog fa-spin'" onmouseout="document.getElementById('fa-cog').className = 'fa fa-cog'" onclick="resizeEditor()">
+                        <a class="btn btn-default btn-sm pull-left" onmouseover="document.getElementById('fa-cog').className = 'fa fa-cog fa-spin'" onmouseout="document.getElementById('fa-cog').className = 'fa fa-cog'" onclick="toggleSettings()">
                             <i class="fa fa-cog" id="fa-cog">
                             </i> 
                         </a>
                         
-                        <select class="form-control col-sm-2 input-sm" name="Theme" id="theme" onkeydown = "return (event.keyCode!=13);" onchange="setTheme(this)">
+                        <select class="form-control col-sm-2 input-sm" style="visibility: hidden" name="Theme" id="theme" onkeydown = "return (event.keyCode!=13);" onchange="setTheme(this)">
                             <% if (typeof theme !== 'undefined') { %>
                             <option selected disabled>Choose Theme</option>
                                 <% for(var i=0; i<theme.length; i++) { %>
@@ -92,7 +81,7 @@
                                 <% } %>
                             <% } %>
                         </select>
-                        <select class="form-control col-sm-2 col-sm-offset-1 input-sm" name="Mode" id="mode" onkeydown = "return (event.keyCode!=13);" onchange="setMode(this)">
+                        <select class="form-control col-sm-2 col-sm-offset-1 input-sm" style="visibility: hidden" name="Mode" id="mode" onkeydown = "return (event.keyCode!=13);" onchange="setMode(this)">
                             <% if (typeof theme !== 'undefined') { %>
                             <option selected disabled>Choose Mode</option>
                                 <% for(var i=0; i<theme.length; i++) { %>
@@ -115,7 +104,7 @@
                 <button id="submit" type="submit" class="btn btn-primary col-sm-2">Save</button>
             </form> 
         </div> 
-        <div class="container col-sm-3 col-md-3" style="background-color: #e0e0e0;">
+        <div class="container col-sm-3 col-md-3" id="searchBar">
             <form action="/search "class="navbar-form" role="search" method="post">
                 <input type="hidden" name="Theme" id="themeSearch" value="<%= editor %>" >
                 <input type="hidden" name="Mode" id="modeSearch" value="<%= mode %>" >
@@ -150,6 +139,13 @@
                 <% } %>
             </div>
         </div>
+        <div class="footer">
+           <div class="container narrow row-fluid">
+                <div style="text-align:center;" class="col-sm-12">
+                    <a href="/profile">Account info</a>
+                </div>
+           </div>
+        </div>
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
         <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
@@ -175,22 +171,30 @@
             });
 
             //Change size of editor
-            function resizeEditor() {
-                e = document.getElementById('editor');
-                e.id = "editorFullscreen";
-                editor.resize(true);
+            function toggleSettings() {
+                var theme =document.getElementById('theme');
+                var mode = document.getElementById('mode');
+                if (theme.style.visibility=='hidden'){
+                    theme.style.visibility='visible';
+                    mode.style.visibility='visible';
+                }else{
+                    theme.style.visibility='hidden';
+                    mode.style.visibility='hidden';
+                }
             }
 
 
             //Change Theme of Editor when selector changed
             function setTheme(selector) {
                 editor.setTheme("ace/theme/"+selector.value);
-                
                 var ThemeNode = document.getElementsByName("Theme");
 
                 for (var i = ThemeNode.length - 1; i >= 0; i--) {
                     ThemeNode[i].value = selector.value;
                 };
+                var themeForm =document.getElementById("storeTheme");
+                themeForm.submit();
+                
             }
 
             //Change Mode of Editor when selector changed
