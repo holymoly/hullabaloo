@@ -26,7 +26,7 @@ Set user as admin from mongo cli
 
 Users can be locked or set as admin from profile page (Account Settings).
 ```
-db.users.update({"local.email":"user@email.com"},{$set : {"local.locked":false}})
+db.users.update({"local.email":"user@email.com"},{$set : {"local.admin":true}})
 ```
 
 Unlock user from mongo cli
