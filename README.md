@@ -10,12 +10,13 @@ Install Procedure
 
 [Install nodejs](http://nodejs.org/)
 
-Clone repository
+Clone repository and install npm modules
 ```
 git clone https://github.com/holymoly/hullabaloo
+cd hullabaloo
+npm install
 ```
 
-Install
 Set user as admin from mongo cli
 --------------------------
 
