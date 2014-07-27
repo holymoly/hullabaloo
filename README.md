@@ -19,7 +19,7 @@ npm install
 Run hullabaloo
 ```
 node sever.js
-``
+```
 
 Set user as admin from mongo cli
 --------------------------
