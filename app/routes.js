@@ -3,6 +3,8 @@ var Post       = require('../app/models/post');
 var Preference = require('../app/models/preference');
 var User = require('../app/models/user');
 var fs = require('fs');
+var _ = require("underscore");
+
 module.exports = function(app, passport) {
 
 // normal routes ===============================================================
@@ -35,9 +37,15 @@ module.exports = function(app, passport) {
 	app.get('/post', isLoggedIn, function(req, res) {
         process.nextTick(function() {
 	        Preference.findOne({ 'preference.email' : req.user.local.email }, function(err, preference) {
-	        	if (err)
-               		throw err;
-				renderDefault(preference,res);
+                if (err)
+                    throw err;
+                findCategories(function(categories){
+                    renderDefault(
+                        preference,
+                        categories,
+                        res
+                    );
+                })
 			});
 		});	
 	});
@@ -62,14 +70,16 @@ module.exports = function(app, passport) {
                 Post.findOne({ 'title' :  req.body.Title }, function(err, post) {
                     // if there are any errors, return the error
                     if (err){
-                    	console.log(err);
+                        throw err;
                     	response(true,false);
-                    }                       
+                    }         
+
 
                     // check to see if there is already a post with that title
                     if (post) {
-                        console.log(post);
-                        renderSave(false,true,req,res,post._id);
+                        findCategories(function(categories){
+                            renderSave(false,categories,true,req,res,post._id);
+                        });
                     } else {
                         // create the post
                         var newPost         = new Post();
@@ -84,13 +94,13 @@ module.exports = function(app, passport) {
 
                         newPost.save(function(err) {
                             if (err){
-                            	console.log(err);
-                            	throw err;
+                                throw err;
                             	response(true,false,req);
                             }
-                                
-                        console.log(newPost);
-                        renderSave(false,false,req,res,undefined);
+                           
+                            findCategories(function(categories){
+                                renderSave(false,categories,false,req,res,undefined);
+                            });
                         });
                     }
                 });
@@ -104,7 +114,6 @@ module.exports = function(app, passport) {
             process.nextTick(function() {
                 Post.findById(req.body.Id, function (err, doc) {
                     if (err){
-                        console.log(err);
                         throw err;
                         response(true,req);
                     }
@@ -118,8 +127,9 @@ module.exports = function(app, passport) {
                     doc.created     = new Date().toISOString(),
                     doc.Author      = req.user.local.email,
                     
-                    doc.save(renderSave(false,false,req,res,doc._id));
-
+                    findCategories(function(categories){
+                        doc.save(renderSave(false,categories,false,req,res,doc._id));
+                    });
                 });
             });
         });
@@ -178,8 +188,9 @@ module.exports = function(app, passport) {
                     }
                     console.log(req.body.Theme);
                     doc.preference.editor      = req.body.Theme,
-                    doc.save(renderSave(false,false,req,res,-1));
-
+                    findCategories(function(categories){
+                        doc.save(renderSave(false,categories,false,req,res,-1));
+                    });
                 });
             });
         });
@@ -188,38 +199,43 @@ module.exports = function(app, passport) {
 		// save/update the post
 		app.post('/search', isLoggedIn, function(req, res) {
             //if search string is empty return all posts
-            if (req.body.searchTerm === ''){
-                Post.find({}, function (err, output) {
-                    if (err){
-                        console.log(err);
-                    }
-                    renderSearch(output,req,res);
-                });
-            }else{
-                Post.textSearch(req.body.searchTerm,{project : 'title description'}, function (err, output) {
-                    if (err){
-                        console.log(err);
-                    }
-                    if(output.results.length !== 0){
-                        processArray(0,output.results,req,res, renderSearch);
-                    }else{
-                        renderSearch([],req,res);
-                    }
-                });
-            }
+                if (req.body.searchTerm === ''){
+                    Post.find({}, function (err, output) {
+                        if (err){
+                            console.log(err);
+                        }
+                        findCategories(function(categories){
+                            renderSearch(output,categories,req,res);
+                        });
+                    });
+                }else{
+                    Post.textSearch(req.body.searchTerm,{project : 'title description'}, function (err, output) {
+                        if (err){
+                            console.log(err);
+                        }
+                        if(output.results.length !== 0){
+                            processArray(0,output.results,req,res,renderSearch);
+                        }else{
+                            findCategories(function(categories){
+                                renderSearch([],categories,req,res);
+                            });
+                        }
+                    });
+                }
 		});
 
         // Select ============================
         // Select a post from search list
         app.post('/select', isLoggedIn, function(req, res) {
-            console.log(req.body);
             //Get back search results
             if (req.body.searchTerm === ''){
                 Post.find({}, function (err, output) {
                     if (err){
                         console.log(err);
                     }
-                    renderSelect(output,req,res);
+                    findCategories(function(categories){
+                        renderSelect(output,categories,req,res);
+                    });
                 });
             }else{
                 Post.textSearch(req.body.searchTerm,{project : 'title description'}, function (err, output) {
@@ -227,6 +243,7 @@ module.exports = function(app, passport) {
                         console.log(err);
                     }
                     processArray(0,output.results,req,res,renderSelect);
+                    
                 });
             }
         });
@@ -307,20 +324,26 @@ function isLoggedIn(req, res, next) {
 
 //remove score and and nested obj: from array
 function processArray(index, array, req, res, cb){
+
     array[index] = array[index].obj;
     //check if last item index/item is reached
     if(index+1 === array.length){
-        cb(array,req,res);
+        findCategories(function(categories){
+            cb(array,categories,req,res);
+        });
     }else{
         processArray(index+1,array, req, res, cb);
     }
 }
+
 //render default post page
-function renderDefault(data,res){
+function renderDefault(data,categories,res){
     var files = fs.readdirSync('./public/ace/src-min/');
+    //console.log(data);
     res.render('post.ejs', {
         searchTerm  : '',
         category    : '',
+        categories  : categories, 
         title       : '',
         description : '',
         type        : '',
@@ -334,11 +357,12 @@ function renderDefault(data,res){
 }
 
 //render page after search based on retreived data
-function renderSearch(data,req,res){
+function renderSearch(data,categories,req,res){
     var files = fs.readdirSync('./public/ace/src-min/');
     res.render('post.ejs', { 
         searchTerm  : req.body.searchTerm,
         category    : '',
+        categories  : categories,
         title       : '',
         description : '',
         post        : '',
@@ -352,7 +376,7 @@ function renderSearch(data,req,res){
 }
 
 //render page after select based on retreived data
-function renderSelect(data,req,res){
+function renderSelect(data,categories,req,res){
     //find seleted post for rendering
     Post.findById(req.body.Select, function (err, result) {
         if (err){
@@ -363,6 +387,7 @@ function renderSelect(data,req,res){
         res.render('post.ejs', { 
             searchTerm  : req.body.searchTerm,
             category    : result.category,
+            categories  : categories,
             title       : result.title,
             description : result.description,
             post        : result.post,
@@ -376,12 +401,13 @@ function renderSelect(data,req,res){
     });
 }
 
-function renderSave(err,exists,req,res,id){
+function renderSave(err,categories,exists,req,res,id){
     var files = fs.readdirSync('./public/ace/src-min/');
     //error and exists need to be finished(Reporting to website)
     res.render('post.ejs', { 
         searchTerm  : '',
         category    : req.body.Category,
+        categories  : categories,
         title       : req.body.Title,
         description : req.body.Description,
         post        : req.body.Post,
@@ -393,4 +419,12 @@ function renderSave(err,exists,req,res,id){
         id          : id,
         exists      : exists
     });
+}
+
+function findCategories(cb){
+    Post.find({}, 'category', function (err, categories) {
+        if (err)
+            throw err;
+        cb(_.uniq(_.map(categories, function(element){ return element.category;})));
+    }); 
 }

@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>Newsletter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body style="margin: 0; padding: 0;">
+ <table align="center" border="1" cellpadding="0" cellspacing="0" width="600">
+ <tr>
+  <td align="center" bgcolor="#E4DFCD" style="padding: 40px 30px 40px 30px;">
+    <h2>
+      <b>New Posts</b>
+    </h2>
+    <h4> Your weekly source for bugfixes, guides and cooking recipes</h4>
+  </td>
+ </tr>
+ <% for(var i=0; i<data.length; i++) { %>
+   <tr>
+    <td align="center" bgcolor="#E4DFCD" style="padding: 40px 30px 40px 30px;">
+     <h3> Post <%= i %></h3>
+     <h4> Category: <%= data[i].category %>  </h4>
+     <h4> Title: <%= data[i].title %>  </h4>
+     <h4> Description: <%= data[i].description %>  </h4>
+    </td>
+   </tr>
+ <% } %>
+</table>
+</html>
