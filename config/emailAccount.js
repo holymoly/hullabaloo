@@ -4,7 +4,7 @@ module.exports = {
         host         : "yourhost", 
         user         : "youruser", 
         password     : "awesomesecret",
-        email        : "you@something.com",
+        email        : "me@something.com",
     }
 };    
 
