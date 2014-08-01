@@ -105,6 +105,7 @@ module.exports = function(passport) {
                         newPreference.preference.email = email;
                         newPreference.preference.editor = 'github';
                         newPreference.preference.mainLanguage = 'text';
+                        newPreference.preference.newsletter = true;
 
                         
                         newUser.save(function(err) {

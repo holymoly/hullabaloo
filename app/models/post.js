@@ -1,6 +1,7 @@
 // load the things we need
 var mongoose = require('mongoose');
 var textSearch = require('mongoose-text-search');
+var _ = require("underscore");
 
 // define the schema for our note model
 var postSchema = mongoose.Schema({
@@ -32,6 +33,18 @@ postSchema.index({
         post        : 3,
     }
 })
+
+// generating a hash
+postSchema.methods.findPostsSince = function(date,cb) {
+    //console.log(date);
+    this.model('Post').find({"created": {"$gte": new Date(date)}},'category title description',function(err,postsSince){
+            if (err){
+                throw err;
+            }
+            //console.log(_.sortBy(postsSince,'category'));
+            cb(_.sortBy(postsSince,'category'));
+    });
+};
 
 // create the model for users and expose it to our app
 module.exports = mongoose.model('Post', postSchema);

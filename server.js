@@ -16,6 +16,11 @@ var session      = require('express-session');
 
 var configDB = require('./config/database.js');
 
+//*********************************************
+var email = require('./app/email.js')
+
+
+
 // configuration ===============================================================
 mongoose.connect(configDB.url); // connect to our database
 

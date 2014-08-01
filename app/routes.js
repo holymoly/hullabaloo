@@ -37,7 +37,7 @@ module.exports = function(app, passport) {
 	app.get('/post', isLoggedIn, function(req, res) {
         process.nextTick(function() {
 	        Preference.findOne({ 'preference.email' : req.user.local.email }, function(err, preference) {
-	        	if (err)
+                if (err)
                     throw err;
                 findCategories(function(categories){
                     renderDefault(
@@ -339,7 +339,7 @@ function processArray(index, array, req, res, cb){
 //render default post page
 function renderDefault(data,categories,res){
     var files = fs.readdirSync('./public/ace/src-min/');
-    console.log(data);
+    //console.log(data);
     res.render('post.ejs', {
         searchTerm  : '',
         category    : '',
