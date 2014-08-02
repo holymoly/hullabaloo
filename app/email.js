@@ -14,8 +14,8 @@ var ejs = require('ejs')
 //**********Setting Date for sending email**************
 var rule = new schedule.RecurrenceRule();
 //rule.dayOfWeek = 1;
-//rule.hour = 6;
-rule.minute =1;
+rule.hour = 1;
+//rule.minute =1;
 
 // create reusable transporter object using SMTP transport
 var transporter = nodemailer.createTransport({
@@ -35,7 +35,7 @@ var transporter = nodemailer.createTransport({
 
 
 //Starting scheduled job
-var j = schedule.scheduleJob('* * * * *', function(){
+var j = schedule.scheduleJob(rule, function(){
     
     //Get posts of last week
     var oneWeekAgo = new Date();
@@ -45,14 +45,14 @@ var j = schedule.scheduleJob('* * * * *', function(){
         preference = new Preference;
         preference.findNewsletterUser(function(emails){
             var messageHtml = ejs.render(htmlNewsletter,{ data : postsSince });
-            var receiver = _.map(emails, function(element){ return element.preference.email;}).join();
+            var receiver = _.map(emails, function(element){ return element.email;}).join();
 
             console.log(messageHtml);
             var mailOptions = {
                 from: mailConfig.newsletter.email, // sender address
                 bcc: receiver, // list of receivers
-                subject: 'Hello', // Subject line
-                text: postsSince, // plaintext body
+                subject: 'hullabaloo news', // Subject line
+                //text: postsSince, // plaintext body
                 html: messageHtml // html body
             };
              // send mail with defined transport object

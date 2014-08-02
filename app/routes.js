@@ -16,18 +16,23 @@ module.exports = function(app, passport) {
 
 	// PROFILE SECTION =========================
 	app.get('/profile', isLoggedIn, function(req, res) {
-        //console.log(req.user.local.email);
-        User.findOne({ 'local.email' : req.user.local.email },'local.admin', function(err, user) {
+        //console.log(req.user.email);
+        User.findOne({ 'email' : req.user.email },'admin', function(err, user) {
             if (err)
                 throw err;
-            User.find({},'local.admin local.locked local.email' , function(err,allUser){
+            User.find({},'admin locked email' , function(err,allUser){
                 if (err)
                     throw err;
-                console.log(allUser);
-                res.render('profile.ejs', {
-                    user    : req.user,
-                    admin   : user.local.admin,
-                    allUser : allUser
+                Preference.find({},'newsletter email', function(err, newsletter) {
+                    if (err)
+                        throw err;
+                    console.log(newsletter);
+                    res.render('profile.ejs', {
+                        user        : req.user,
+                        admin       : user.admin,
+                        allUser     : allUser,
+                        newsletter  : newsletter
+                    });
                 });
             });
         });
@@ -36,15 +41,25 @@ module.exports = function(app, passport) {
 	// POST SECTION =========================
 	app.get('/post', isLoggedIn, function(req, res) {
         process.nextTick(function() {
-	        Preference.findOne({ 'preference.email' : req.user.local.email }, function(err, preference) {
+	        Preference.findOne({ 'email' : req.user.email }, function(err, data) {
                 if (err)
                     throw err;
                 findCategories(function(categories){
-                    renderDefault(
-                        preference,
+                    renderPost(
+                        '',
+                        '',
                         categories,
-                        res
-                    );
+                        '',
+                        '',
+                        '',
+                        '',
+                        '',
+                        '',
+                        data.editor,
+                        data.mainLanguage,
+                        '',  
+                        '',           
+                        res);
                 })
 			});
 		});	
@@ -78,7 +93,21 @@ module.exports = function(app, passport) {
                     // check to see if there is already a post with that title
                     if (post) {
                         findCategories(function(categories){
-                            renderSave(false,categories,true,req,res,post._id);
+                            renderPost(
+                                '',
+                                req.body.Category,
+                                categories,
+                                req.body.Title,
+                                req.body.Description,
+                                req.body.Post,
+                                req.body.Tags,
+                                undefined,
+                                '',
+                                req.body.Theme,
+                                req.body.Mode,
+                                true, 
+                                post._id,               
+                                res);
                         });
                     } else {
                         // create the post
@@ -90,7 +119,7 @@ module.exports = function(app, passport) {
                         newPost.type        = req.body.Mode;
                         newPost.tags        = req.body.Tags.split(",");
                         newPost.created     = new Date().toISOString();
-                        newPost.Author      = req.user.local.email;
+                        newPost.Author      = req.user.email;
 
                         newPost.save(function(err) {
                             if (err){
@@ -99,7 +128,21 @@ module.exports = function(app, passport) {
                             }
                            
                             findCategories(function(categories){
-                                renderSave(false,categories,false,req,res,undefined);
+                                renderPost(
+                                    '',
+                                    req.body.Category,
+                                    categories,
+                                    req.body.Title,
+                                    req.body.Description,
+                                    req.body.Post,
+                                    req.body.Tags,
+                                    undefined,
+                                    '',
+                                    req.body.Theme,
+                                    newPost.type,
+                                    false, 
+                                    undefined,               
+                                    res);
                             });
                         });
                     }
@@ -125,10 +168,26 @@ module.exports = function(app, passport) {
                     doc.type        = req.body.Mode,
                     doc.tags        = req.body.Tags.split(","),
                     doc.created     = new Date().toISOString(),
-                    doc.Author      = req.user.local.email,
+                    doc.Author      = req.user.email,
                     
                     findCategories(function(categories){
-                        doc.save(renderSave(false,categories,false,req,res,doc._id));
+                        doc.save(
+                            renderPost(
+                                    '',
+                                    req.body.Category,
+                                    categories,
+                                    req.body.Title,
+                                    req.body.Description,
+                                    req.body.Post,
+                                    req.body.Tags,
+                                    undefined,
+                                    '',
+                                    req.body.Theme,
+                                    doc.type,
+                                    false, 
+                                    undefined,               
+                                    res)
+                        );
                     });
                 });
             });
@@ -140,33 +199,95 @@ module.exports = function(app, passport) {
         app.post('/updateUser', isLoggedIn, function(req, res) {
             // asynchronous
             process.nextTick(function() {
-                User.findOne({ 'local.email' : req.body.User },'local.admin', function(err, user) {
+                User.findOne({ 'email' : req.body.User },'admin', function(err, user) {
                     if (err)
                         throw err;
-                    console.log(req.body);
+
                     if(req.body.Admin==='on'){
-                        user.local.admin = true;
+                        user.admin = true;
                     }else{
-                        user.local.admin = false;
+                        user.admin = false;
                     }
 
                     if(req.body.Locked==='on'){
-                        user.local.locked = true;
+                        user.locked = true;
                     }else{
-                        user.local.locked = false;
+                        user.locked = false;
                     }
 
-                    user.save(function(){
+                    Preference.findOne({ 'email' : req.body.User }, function(err, preference) {
                         if (err)
                             throw err;
-                        User.find({},'local.admin local.locked local.email' , function(err,allUser){
+
+                        if(req.body.Newsletter==='on'){
+                            preference.newsletter = true;
+                        }else{
+                            preference.newsletter = false;
+                        }
+                        preference.save(function(){
                             if (err)
                                 throw err;
-                            //console.log(allUser);
-                            res.render('profile.ejs', {
-                                user    : req.user,
-                                admin   : user.local.admin,
-                                allUser : allUser
+                        });
+                        user.save(function(){
+                            if (err)
+                                throw err;
+                            User.find({},'admin locked email' , function(err,allUser){
+                                if (err)
+                                    throw err;
+
+                                Preference.find({},'newsletter email', function(err, newsletter) {
+                                    if (err)
+                                        throw err;
+                                    res.render('profile.ejs', {
+                                        user        : req.user,
+                                        admin       : user.admin,
+                                        allUser     : allUser,
+                                        newsletter  : newsletter
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+
+        // Update User settings ================
+        // save/update the user settings
+        app.post('/updateNewsletter', isLoggedIn, function(req, res) {
+            // asynchronous
+            
+            process.nextTick(function() {
+                User.findOne({ 'email' : req.body.User },'admin', function(err, user) {
+                    if (err)
+                        throw err;
+
+                    Preference.findOne({ 'email' : req.body.User }, function(err, preference) {
+                        if (err)
+                            throw err;
+                        if(req.body.Newsletter==='on'){
+                            preference.newsletter = true;
+                        }else{
+                            preference.newsletter = false;
+                        }
+                        preference.save(function(){
+                            if (err)
+                                throw err;
+                        });
+
+                        User.find({},'admin locked email' , function(err,allUser){
+                            if (err)
+                                throw err;
+
+                            Preference.find({},'newsletter email', function(err, newsletter) {
+                                if (err)
+                                    throw err;
+                                res.render('profile.ejs', {
+                                    user        : req.user,
+                                    admin       : user.admin,
+                                    allUser     : allUser,
+                                    newsletter  : newsletter
+                                });
                             });
                         });
                     });
@@ -180,16 +301,32 @@ module.exports = function(app, passport) {
             console.log(req.body);
             // asynchronous
             process.nextTick(function() {
-                Preference.findOne({ 'preference.email' : req.user.local.email }, function (err, doc) {
+                Preference.findOne({ 'email' : req.user.email }, function (err, doc) {
                     if (err){
                         console.log(err);
                         throw err;
                         response(true,req);
                     }
                     console.log(req.body.Theme);
-                    doc.preference.editor      = req.body.Theme,
+                    doc.editor      = req.body.Theme,
                     findCategories(function(categories){
-                        doc.save(renderSave(false,categories,false,req,res,-1));
+                        doc.save(
+                            renderPost(
+                                    '',
+                                    req.body.Category,
+                                    categories,
+                                    req.body.Title,
+                                    req.body.Description,
+                                    req.body.Post,
+                                    req.body.Tags,
+                                    undefined,
+                                    '',
+                                    req.body.Theme,
+                                    req.body.Mode,
+                                    false, 
+                                    -1,              
+                                    res)
+                        );
                     });
                 });
             });
@@ -199,13 +336,14 @@ module.exports = function(app, passport) {
 		// save/update the post
 		app.post('/search', isLoggedIn, function(req, res) {
             //if search string is empty return all posts
+            console.log(req.body);
                 if (req.body.searchTerm === ''){
-                    Post.find({}, function (err, output) {
+                    Post.find({}, function (err, result) {
                         if (err){
                             console.log(err);
                         }
                         findCategories(function(categories){
-                            renderSearch(output,categories,req,res);
+                            render(req.body.searchTerm,categories,result,req.body.Theme,req.body.Mode,res);
                         });
                     });
                 }else{
@@ -214,38 +352,79 @@ module.exports = function(app, passport) {
                             console.log(err);
                         }
                         if(output.results.length !== 0){
-                            processArray(0,output.results,req,res,renderSearch);
+                            processArray(0,output.results,req,res,render);
                         }else{
                             findCategories(function(categories){
-                                renderSearch([],categories,req,res);
+                                render(req.body.searchTerm,categories,[],req.body.Theme,req.body.Mode,res);
                             });
                         }
                     });
+                }
+
+                function render(searchTerm,categories,result,theme,mode,res){
+                    renderPost(
+                                searchTerm,
+                                '',
+                                categories,
+                                '',
+                                '',
+                                '',
+                                '',
+                                result,
+                                -1,
+                                theme,
+                                mode,
+                                '', 
+                                '',                
+                                res);
                 }
 		});
 
         // Select ============================
         // Select a post from search list
         app.post('/select', isLoggedIn, function(req, res) {
-            //Get back search results
-            if (req.body.searchTerm === ''){
-                Post.find({}, function (err, output) {
-                    if (err){
-                        console.log(err);
-                    }
-                    findCategories(function(categories){
-                        renderSelect(output,categories,req,res);
+            Post.findById(req.body.Select, function (err, post) {
+                if (err){
+                    console.log(err);
+                }
+                //Get back search results
+                if (req.body.searchTerm === ''){
+                    Post.find({}, function (err, result) {
+                        if (err){
+                            console.log(err);
+                        }
+                        findCategories(function(categories){
+                            render(req.body.searchTerm,categories,result,req.body.Theme,req.body.Mode,res);
+                        });
                     });
-                });
-            }else{
-                Post.textSearch(req.body.searchTerm,{project : 'title description'}, function (err, output) {
-                    if (err){
-                        console.log(err);
-                    }
-                    processArray(0,output.results,req,res,renderSelect);
-                    
-                });
-            }
+                }else{
+                    Post.textSearch(req.body.searchTerm,{project : 'title description'}, function (err, result) {
+                        if (err){
+                            console.log(err);
+                        }
+                        processArray(0,result.results,req,res,render);
+                        
+                    });
+                }
+
+                function render(searchTerm,categories,result,theme,mode,res){
+                    renderPost(
+                                searchTerm,
+                                post.category,
+                                categories,
+                                post.title,
+                                post.description,
+                                post.post,
+                                post.tags,
+                                result,
+                                req.body.selID,
+                                theme,
+                                post.type,
+                                '', 
+                                '',                
+                                res);
+                }
+            }); 
         });
 
 // =============================================================================
@@ -302,12 +481,17 @@ module.exports = function(app, passport) {
 
 	// local -----------------------------------
 	app.get('/unlink/local', isLoggedIn, function(req, res) {
-		var user            = req.user;
-		user.local.email    = undefined;
-		user.local.password = undefined;
-		user.save(function(err) {
-			res.redirect('/profile');
-		});
+        User.findOne({ 'email' : req.user.email }, function(err, user) {
+            if (err)
+                throw err;
+            user.remove();
+        });
+        Preference.findOne({ 'email' : req.user.email }, function(err, preference) {
+            if (err)
+                throw err;
+            preference.remove();
+        });
+        res.redirect('/');
 	});
 
 };
@@ -329,7 +513,7 @@ function processArray(index, array, req, res, cb){
     //check if last item index/item is reached
     if(index+1 === array.length){
         findCategories(function(categories){
-            cb(array,categories,req,res);
+            cb(req.body.searchTerm,categories,array,req.body.Theme,req.body.Mode,res);
         });
     }else{
         processArray(index+1,array, req, res, cb);
@@ -337,87 +521,24 @@ function processArray(index, array, req, res, cb){
 }
 
 //render default post page
-function renderDefault(data,categories,res){
-    var files = fs.readdirSync('./public/ace/src-min/');
-    //console.log(data);
+function renderPost(searchTerm,category,categories,title,description,post,tags,result,selID,editor,mode,exists,id,res){
+    var themes = fs.readdirSync('./public/ace/src-min/');
+    console.log(mode);
     res.render('post.ejs', {
-        searchTerm  : '',
-        category    : '',
+        searchTerm  : searchTerm,
+        category    : category,
         categories  : categories, 
-        title       : '',
-        description : '',
-        type        : '',
-        post        : '',
-        tags        : '',
-        result      : undefined,
-        theme       : files,
-        editor      : data.preference.editor,
-        mode        : data.preference.mainLanguage
-    });
-}
-
-//render page after search based on retreived data
-function renderSearch(data,categories,req,res){
-    var files = fs.readdirSync('./public/ace/src-min/');
-    res.render('post.ejs', { 
-        searchTerm  : req.body.searchTerm,
-        category    : '',
-        categories  : categories,
-        title       : '',
-        description : '',
-        post        : '',
-        tags        : '',
-        result      : data,
-        theme       : files,
-        selID       : -1,
-        editor      : req.body.Theme,
-        mode        : req.body.Mode
-    });
-}
-
-//render page after select based on retreived data
-function renderSelect(data,categories,req,res){
-    //find seleted post for rendering
-    Post.findById(req.body.Select, function (err, result) {
-        if (err){
-            console.log(err);
-        }
-        console.log(result);
-        var files = fs.readdirSync('./public/ace/src-min/');
-        res.render('post.ejs', { 
-            searchTerm  : req.body.searchTerm,
-            category    : result.category,
-            categories  : categories,
-            title       : result.title,
-            description : result.description,
-            post        : result.post,
-            tags        : result.tags,
-            result      : data,
-            theme       : files,
-            selID       : req.body.selID,
-            editor      : req.body.Theme,
-            mode        : result.type,
-        });
-    });
-}
-
-function renderSave(err,categories,exists,req,res,id){
-    var files = fs.readdirSync('./public/ace/src-min/');
-    //error and exists need to be finished(Reporting to website)
-    res.render('post.ejs', { 
-        searchTerm  : '',
-        category    : req.body.Category,
-        categories  : categories,
-        title       : req.body.Title,
-        description : req.body.Description,
-        post        : req.body.Post,
-        tags        : req.body.Tags,
-        result      : undefined,
-        theme       : files,
-        editor      : req.body.Theme,
-        mode        : req.body.Mode,
+        title       : title,
+        description : description,
+        post        : post,
+        tags        : tags,
+        result      : result,
+        theme       : themes,
+        selID       : selID,
+        editor      : editor,
+        mode        : mode,
+        exists      : exists,
         id          : id,
-        exists      : exists
     });
 }
 

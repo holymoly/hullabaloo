@@ -16,25 +16,34 @@
 	<div class="row">
 
 		<!-- LOCAL INFORMATION -->
-		<div class="col-sm-8 col-sm-offset-2">
+		<div class="col-sm-10 col-sm-offset-1">
 			<div class="well" name="adminDiv">
 				<h3><span class="fa fa-user"></span> Local</h3>
-				<% if (user.local.email) { %>
 					<p>
 						<strong>id</strong>: <%= user._id %><br>
-						<strong>email</strong>: <%= user.local.email %><br>
-						<strong>password</strong>: <%= user.local.password %>
+						<strong>email</strong>: <%= user.email %><br>
+						<strong>password</strong>: <%= user.password %>
 					</p>
-					<a href="/unlink/local" class="btn btn-default">Remove Account</a>
-					<a href="/post" class="btn btn-default">Post</a>
-					<a href="/logout" class="btn btn-default btn-sm">Logout</a>
-				<% } else { %>
-					<a href="/connect/local" class="btn btn-default">Connect Local</a>
-				<% } %>
+					<a href="/unlink/local" class="btn btn-warning btn-lg col-sm-3 col-md-3">Remove Account</a>
+					<a href="/post" class="btn btn-warning btn-lg col-sm-3 col-md-3">Post</a>
+					<a href="/logout" class="btn btn-warning btn-lg col-sm-3 col-md-3">Logout</a>
+					<a>
+						<form action="/updateNewsletter" method="post">
+							<% if( newsletter[newsletter.map(function(userItem) { return userItem.email }).indexOf(user.email)].newsletter) {%>
+								<input type="checkbox" style="display:none;" name="Newsletter">
+								<button  type="submit" id="Update" class="btn btn-warning btn-lg ">Unsubscribe</button>
+			            	<% } else { %>
+			            		<input type="checkbox" style="display:none;"  name="Newsletter" checked="checked">           		
+			            		<button  type="submit" id="Update" class="btn btn-warning btn-lg">Subscribe</button>
+			            	<% } %>
+			            	<input type="hidden" name="User" value="<%= user.email %>" >
+
+			            </form>
+			        </a>
 			</div>
 		</div>
-		<% if (user.local.admin) { %>
-			<div class="col-sm-8 col-sm-offset-2">
+		<% if (user.admin) { %>
+			<div class="col-sm-10 col-md-10 col-sm-offset-2 col-md-offset-1">
 				<div class="panel panel-default">
 				  	<!-- Default panel contents -->
 				  	<h3><div class="panel-heading">User Table</div></h3>
@@ -46,6 +55,7 @@
 						            <th>User email</th>
 						            <th>Is Admin</th>
 						            <th>Is Locked</th>
+						            <th>Newsletter</th>
 						            <th></th>
 					          	</tr>
 					        </thead>
@@ -54,25 +64,32 @@
 						          	<tr>
 						          		<form action="/updateUser" method="post">
 								            <td>
-								            	<%= allUser[i].local.email %>
-								            	<input type="hidden" name="User" value="<%= allUser[i].local.email %>" >
+								            	<%= allUser[i].email %>
+								            	<input type="hidden" name="User" value="<%= allUser[i].email %>" >
 								            </td>
 								            <td>
-								            	<% if  (allUser[i].local.admin){ %>
+								            	<% if  (allUser[i].admin){ %>
 								            		<input type="checkbox" name="Admin" checked="checked">
 								            	<% } else { %>
 								            		<input type="checkbox" name="Admin">
 								            	<% } %>
 								            </td>
 								            <td>
-								            	<% if  (allUser[i].local.locked){ %>
+								            	<% if  (allUser[i].locked){ %>
 								            		<input type="checkbox" name="Locked" checked="checked">
 								            	<% } else { %>
 								            		<input type="checkbox" name="Locked">
 								            	<% } %>
 								            </td>
 								            <td>
-								            	<button  type="submit" id="Update" class="btn btn-primary">Update</button>
+								            	<% if  ( newsletter[newsletter.map(function(userItem) { return userItem['email'] }).indexOf(allUser[i].email)].newsletter){ %>
+								            		<input type="checkbox" name="Newsletter" checked="checked">
+								            	<% } else { %>
+								            		<input type="checkbox" name="Newsletter">
+								            	<% } %>
+								            </td>
+								            <td>
+								            	<button  type="submit" id="Update" class="btn btn-warning btn-lg">Update</button>
 								            </td>
 								        </form>
 							        </tr>							        
