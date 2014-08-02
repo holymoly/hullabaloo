@@ -43,7 +43,7 @@ module.exports = function(passport) {
 
         // asynchronous
         process.nextTick(function() {
-            User.findOne({ 'local.email' :  email }, function(err, user) {
+            User.findOne({ 'email' :  email }, function(err, user) {
                 // if there are any errors, return the error
                 if (err)
                     return done(err);
@@ -55,7 +55,7 @@ module.exports = function(passport) {
                 if (!user.validPassword(password))
                     return done(null, false, req.flash('loginMessage', 'Oops! Wrong password.'));
 
-                if (user.local.locked === true)
+                if (user.locked === true)
                     return done(null, false, req.flash('loginMessage', 'User is locked'));
 
                 // all is well, return user
@@ -83,7 +83,7 @@ module.exports = function(passport) {
         process.nextTick(function() {
             // if the user is not already logged in:
             if (!req.user) {
-                User.findOne({ 'local.email' :  email }, function(err, user) {
+                User.findOne({ 'email' :  email }, function(err, user) {
                     // if there are any errors, return the error
                     if (err)
                         return done(err);
@@ -97,15 +97,15 @@ module.exports = function(passport) {
                         var newUser            = new User();
                         var newPreference      = new Preference();
 
-                        newUser.local.email    = email;
-                        newUser.local.password = newUser.generateHash(password);
-                        newUser.local.admin    = false;
-                        newUser.local.lock     = false;
+                        newUser.email    = email;
+                        newUser.password = newUser.generateHash(password);
+                        newUser.admin    = false;
+                        newUser.lock     = false;
 
-                        newPreference.preference.email = email;
-                        newPreference.preference.editor = 'github';
-                        newPreference.preference.mainLanguage = 'text';
-                        newPreference.preference.newsletter = true;
+                        newPreference.email = email;
+                        newPreference.editor = 'github';
+                        newPreference.mainLanguage = 'text';
+                        newPreference.newsletter = true;
 
                         
                         newUser.save(function(err) {
@@ -123,11 +123,11 @@ module.exports = function(passport) {
 
                 });
             // if the user is logged in but has no local account...
-            } else if ( !req.user.local.email ) {
+            } else if ( !req.user.email ) {
                 // ...presumably they're trying to connect a local account
                 var user            = req.user;
-                user.local.email    = email;
-                user.local.password = user.generateHash(password);
+                user.email    = email;
+                user.password = user.generateHash(password);
                 user.save(function(err) {
                     if (err)
                         throw err;

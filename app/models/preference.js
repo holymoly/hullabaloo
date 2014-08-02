@@ -3,23 +3,19 @@ var mongoose = require('mongoose');
 
 // define the schema for our user model
 var preferenceSchema = mongoose.Schema({
-
-    preference   	: {
     	email 		: String,	
         editor      : String,
         mainLanguage: String,
         newsletter  : Boolean,
-    }
-
 });
 
-// generating a hash
+// get user which subscribed to the newsletter
 preferenceSchema.methods.findNewsletterUser = function(cb) {
-    this.model('Preference').find({ 'preference.newsletter' : true }, 'preference.email',function(err,emails){
+    this.model('Preference').find({ 'newsletter' : true }, 'email',function(err,emails){
         if (err){
             throw err;
         }
-        cb(emails)
+        cb(emails);
     });
 };
 
