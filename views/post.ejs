@@ -10,6 +10,7 @@
         <link rel="stylesheet" type="text/css" href="/css/style.css">
     </head>
     <body>
+
         <% if (locals.exists) { %>
             <form action="/update "class="navbar-form" method="post">
                 <div class="row alert alert-danger">
@@ -17,7 +18,6 @@
                         <label for="Update" class="col-sm-offset-2 col-sm-2 control-label">Title already exists</label>
                     </h3>
                     <button  type="submit" id="Update" class="btn btn-warning col-sm-2">Update</button>
-                 
                     <input type="hidden" name="Theme" value="<%= editor %>" >
                     <input type="hidden" name="Mode" value="<%= mode %>" >
                     <input type="hidden" name="Category" value="<%= category %>" >
@@ -29,7 +29,6 @@
                 </div>
             </form>
         <% } %>
-
 
         <form action="/storeTheme" method="post" id="storeTheme">
             <input type="hidden" name="Theme" value="<%= editor %>" >
@@ -68,18 +67,21 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="form-group">
                     <label for="Title" class="col-sm-2 control-label">Title</label>
                     <div class="col-sm-10">
                         <input type="text" class="form-control" required name="Title" id="Title" placeholder="Title of Post" onkeydown = "return (event.keyCode!=13);" value="<%= title %>" >
                     </div>
                 </div>
+
                 <div class="form-group">
                     <label for="Description" class="col-sm-2 control-label">Description</label>
                     <div class="col-sm-10">
                         <input type="text" class="form-control" required name="Description" id="Description" placeholder="A Summary of the post" onkeydown = "return (event.keyCode!=13);" value="<%= description %>" >
                     </div>
                 </div>
+
                 <div class="form-group">
                     <label for="Post" class="col-sm-2 control-label">Post</label>
                     <div class="col-sm-10">
@@ -100,6 +102,7 @@
                                 <% } %>
                             <% } %>
                         </select>
+
                         <select class="form-control col-sm-2 col-sm-offset-1 input-sm" style="visibility: hidden" name="Mode" id="mode" onkeydown = "return (event.keyCode!=13);" onchange="setMode(this)">
                             <% if (typeof theme !== 'undefined') { %>
                             <option selected disabled>Choose Mode</option>
@@ -113,17 +116,21 @@
                         
                     </div>
                 </div>
+
                 <div class="form-group">
                     <label for="Tags" class="col-sm-2 control-label">Tags</label>
                     <div class="col-sm-10">
                         <input type="text" class="form-control" required name="Tags"id="Tags" placeholder="Comma seperated Tags describing the Post" onkeydown = "return (event.keyCode!=13);"value="<%= tags %>" >
                     </div>        
                 </div>
+
                 <label class="col-sm-2 control-label"></label>
                 <button id="submit" type="submit" class="btn btn-warning col-sm-2">Save</button>
             </form> 
         </div> 
+
         <div class="container col-sm-2 col-md-2" id="searchBar">
+
             <form action="/search "class="navbar-form" role="search" method="post">
                 <input type="hidden" name="Theme" id="themeSearch" value="<%= editor %>" >
                 <input type="hidden" name="Mode" id="modeSearch" value="<%= mode %>" >
@@ -136,6 +143,7 @@
                     </span>
                 </div>
             </form>
+
             <div class="list-group" id="searchList">
                 <% if (typeof result !== 'undefined') { %>
                     <% for(var i=0; i<result.length; i++) { %>
@@ -158,6 +166,7 @@
                 <% } %>
             </div>
         </div>
+
         <div class="footer">
            <div class="container narrow row-fluid">
                 <div style="text-align:center;" class="col-sm-12">

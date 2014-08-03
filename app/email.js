@@ -1,21 +1,20 @@
 var nodemailer = require('nodemailer');
-
 var mailConfig = require('../config/emailAccount.js');
 var Preference = require('../app/models/preference');
 var schedule = require('node-schedule');
 var Post       = require('../app/models/post');
 var _ = require("underscore");
 
-//needed for html email
+//needed for rendering html email
 var ejs = require('ejs')
   , fs = require('fs')
   , htmlNewsletter = fs.readFileSync('./email/newsletter.ejs', 'utf8'); 
 
-//**********Setting Date for sending email**************
+//**********Setting Date for newsletter email**************
 var rule = new schedule.RecurrenceRule();
-//rule.dayOfWeek = 1;
-rule.hour = 1;
-//rule.minute =1;
+rule.dayOfWeek = 1;
+rule.hour = 6;
+rule.minute = 0;
 
 // create reusable transporter object using SMTP transport
 var transporter = nodemailer.createTransport({
@@ -27,12 +26,6 @@ var transporter = nodemailer.createTransport({
     },
     debug: true
 });
-
-// NB! No need to recreate the transporter object. You can use
-// the same transporter object for all e-mails
-
-// setup e-mail data with unicode symbols
-
 
 //Starting scheduled job
 var j = schedule.scheduleJob(rule, function(){
@@ -47,7 +40,6 @@ var j = schedule.scheduleJob(rule, function(){
             var messageHtml = ejs.render(htmlNewsletter,{ data : postsSince });
             var receiver = _.map(emails, function(element){ return element.email;}).join();
 
-            console.log(messageHtml);
             var mailOptions = {
                 from: mailConfig.newsletter.email, // sender address
                 bcc: receiver, // list of receivers
@@ -66,7 +58,6 @@ var j = schedule.scheduleJob(rule, function(){
         });
     })
 });
-
 
 // create the model for users and expose it to our app
 module.exports = transporter;
