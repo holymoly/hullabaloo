@@ -12,7 +12,7 @@ var ejs = require('ejs')
 
 //**********Setting Date for newsletter email**************
 var rule = new schedule.RecurrenceRule();
-rule.dayOfWeek = 1;
+rule.dayOfWeek = [1];
 rule.hour = 6;
 rule.minute = 0;
 
